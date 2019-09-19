@@ -8,6 +8,9 @@ Created on Tue Sep 17 08:12:22 2019
 ### https://forex-python.readthedocs.io/en/latest/usage.html
 
 import time
+
+# into hours, minutes and seconds 
+import datetime 
 start_time = time.time()
 
 from forex_python.converter import CurrencyRates
@@ -38,7 +41,8 @@ def Mbox(title, text, style):
     return ctypes.windll.user32.MessageBoxW(0, text, title, style)
 
 
-path_of_file = "D:/India 10-Year Bond Yield Historical Data.csv"
+#path_of_file = "D:/India 10-Year Bond Yield Historical Data.csv"
+path_of_file = "C:/Users/KS5046082/Downloads/data.csv"
 # reading csv file 
 def read_Historical_data_file(path_of_file):
     Historical_data = pd.read_csv(path_of_file) 
@@ -51,9 +55,7 @@ def read_Historical_data_file(path_of_file):
     Historical_data = Historical_data.sort_index(ascending=True,axis=0)
     print(Historical_data.columns) #Date	Price	Open	High	Low	Change %
 
-    return data
-
-data = read_Historical_data_file(path_of_file)
+    return Historical_data
 
 def Predictive_model_on_Historical_data(Historical_data):
     new_data = pd.DataFrame(index=range(0,len(Historical_data)),columns=['Date','Price'])
@@ -69,8 +71,8 @@ def Predictive_model_on_Historical_data(Historical_data):
     
     dataset = new_data.values
     
-    train = dataset[0:408,:]
-    valid = dataset[408:,:]
+    train = dataset[0:508,:]
+    valid = dataset[508:,:]
     
     scaler = MinMaxScaler(feature_range=(0, 1))
     
@@ -94,23 +96,24 @@ def Predictive_model_on_Historical_data(Historical_data):
     model.add(Masking(mask_value=0.0))
     
     # Recurrent layer
-    model.add(LSTM(units=5,return_sequences=True,activation='relu',
+    model.add(LSTM(units=100,return_sequences=True,activation='relu',
                    input_shape=(np.array(x_train).shape[1],1)))
     
-    model.add(Dropout(0.2))
+    model.add(Dropout(0.1))
     
     #model.add(LSTM(units=50, return_sequences=True))
     #model.add(Dropout(0.2))
     #model.add(LSTM(units=50, return_sequences=True))
     #model.add(Dropout(0.2))
-    model.add(LSTM(units = 50))
-    model.add(Dropout(0.2))
+    model.add(LSTM(units = 100))
+    #model.add(Dropout(0.1))
     model.add(Dense(1))
     model.compile(loss='mean_squared_error',optimizer='adam')
-    model.fit(x_train,y_train,epochs=70,batch_size=48,verbose=2)
+    model.fit(x_train,y_train,epochs=250,batch_size=1,verbose=2)
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     #model.fit(x_train,y_train,epochs=335,batch_size=80,verbose=2) ##Very Nearer Prediction Values
-    
-    inputs = new_data[len(new_data)-len(valid)-60:].values
+    print(model.summary)
+    inputs = new_data[len(new_data)-len(valid)-10:].values
     inputs= inputs.reshape(-1,1)
     print("inputs = ",len(inputs)) 
     inputs= scaler.transform(inputs)
@@ -133,6 +136,23 @@ def Predictive_model_on_Historical_data(Historical_data):
     print('Train Score: %.2f RMSE' % (rms))
     
     print("Len of price",len(price))
+    last_date = Historical_data['Date'][len(Historical_data)-1]
+    print(last_date)
+    
+    for i in range(2):
+        price_value = np.round(price[i],2)
+        Future_date = last_date + datetime.timedelta(i+1)
+        print("price = ",price_value," Future Date of ", Future_date)
 
 
+def convert_sec(n): 
+    return str(datetime.timedelta(seconds = n))
+
+
+Historical_data = read_Historical_data_file(path_of_file)
 Predictive_model_on_Historical_data(Historical_data)
+
+n =  time.time() - start_time
+
+
+print("---Execution Time ---",convert_sec(n))
