@@ -25,6 +25,9 @@ else:
     import urllib2
 '''
 
+def convert_sec(n): 
+    return str(datetime.timedelta(seconds = n))
+
 # reading csv file 
 def read_Historical_data_file(path_of_file):
     Historical_data = pd.read_csv(path_of_file) 
@@ -92,7 +95,7 @@ def get_latest_Bond_Yield_historical_data():
     return latest_historical_data
 
 def get_latest_USD_INR_Historical_data():
-    path_of_file = "file:///D:/USD_INR Historical Data.csv"
+    path_of_file = "D:/USD_INR Historical Data.csv"
     Historical_data = read_Historical_data_file(path_of_file)
     last_date_rec = Historical_data['Date'][len(Historical_data)-1]
     #print(last_date_rec)
@@ -110,4 +113,9 @@ latest_Bond_Yield_historical_data = get_latest_Bond_Yield_historical_data()
 USD_INR_Historical_Data = get_latest_USD_INR_Historical_data()
 
 # Merging the dataframes                       
-latest_historical_data = pd.merge(latest_Bond_Yield_historical_data, USD_INR_Historical_Data, right_on ='Date', left_on ='Date') 
+latest_historical_data = pd.merge(left=latest_Bond_Yield_historical_data, right=USD_INR_Historical_Data, right_on ='Date', left_on ='Date') 
+
+n =  time.time() - start_time
+
+
+print("---Execution Time ---",convert_sec(n))
